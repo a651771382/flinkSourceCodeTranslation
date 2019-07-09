@@ -32,6 +32,7 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
 
 /**
  * Wrapper around an object representing either a success (with a given value) or a failure cause.
+ * 包装表示成功（具有给定值）或失败原因的对象。
  */
 public class OptionalFailure<T> implements Serializable {
 	private static final long serialVersionUID = 1L;
@@ -39,7 +40,8 @@ public class OptionalFailure<T> implements Serializable {
 	@Nullable
 	private transient T value;
 
-	@Nullable
+	//故障原因
+	@Nullable //参数可用为空
 	private Throwable failureCause;
 
 	private OptionalFailure(@Nullable T value, @Nullable Throwable failureCause) {
@@ -58,28 +60,34 @@ public class OptionalFailure<T> implements Serializable {
 	/**
 	 * @return wrapped {@link OptionalFailure} returned by {@code valueSupplier} or wrapped failure if
 	 * {@code valueSupplier} has thrown an {@link Exception}.
+	 * 由@code valuesupplier返回的wrapped@link optionalfilure，或者如果@code valuesupplier引发了@link exception，
+	 * 则wrapped失败。
 	 */
 	public static <T> OptionalFailure<T> createFrom(CheckedSupplier<T> valueSupplier) {
 		try {
 			return of(valueSupplier.get());
 		} catch (Exception ex) {
+			//返回故障原因
 			return ofFailure(ex);
 		}
 	}
 
 	/**
 	 * @return stored value or throw a {@link FlinkException} with {@code failureCause}.
+	 * 存储值或使用{@code failureCause}抛出{@link FlinkException}
 	 */
 	public T get() throws FlinkException {
 		if (value != null) {
 			return value;
 		}
+		//确认给定对象不为空
 		checkNotNull(failureCause);
 		throw new FlinkException(failureCause);
 	}
 
 	/**
 	 * @return same as {@link #get()} but throws a {@link FlinkRuntimeException}.
+	 * 与@link get（）相同，但抛出@link FlinkRuntimeException。
 	 */
 	public T getUnchecked() throws FlinkRuntimeException {
 		if (value != null) {
@@ -89,6 +97,7 @@ public class OptionalFailure<T> implements Serializable {
 		throw new FlinkRuntimeException(failureCause);
 	}
 
+	//返回不为空的故障信息
 	public Throwable getFailureCause() {
 		return checkNotNull(failureCause);
 	}

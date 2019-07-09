@@ -33,6 +33,7 @@ public interface SupplierWithException<R, E extends Throwable> {
 
 	/**
 	 * Gets the result of this supplier.
+	 * 获取返回的结果
 	 *
 	 * @return The result of thus supplier.
 	 * @throws E This function may throw an exception.

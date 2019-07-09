@@ -32,7 +32,7 @@ import javax.annotation.Nullable;
 
 /**
  * A collection of static utility methods to validate input.
- *
+ * <p>
  * <p>This class is modelled after Google Guava's Preconditions class, and partly takes code
  * from that class. We add this code to the Flink code base in order to reduce external
  * dependencies.
@@ -46,11 +46,12 @@ public final class Preconditions {
 
 	/**
 	 * Ensures that the given object reference is not null.
+	 * 确保给定的对象引用不为null。
 	 * Upon violation, a {@code NullPointerException} with no message is thrown.
+	 * 违反时将抛出没有消息的{@code NullPointerException}。
 	 *
-	 * @param reference The object reference
-	 * @return The object reference itself (generically typed).
-	 *
+	 * @param reference The object reference reference对象引用
+	 * @return The object reference itself (generically typed). 对象引用类型（一般类型）
 	 * @throws NullPointerException Thrown, if the passed reference was null.
 	 */
 	public static <T> T checkNotNull(T reference) {
@@ -64,10 +65,9 @@ public final class Preconditions {
 	 * Ensures that the given object reference is not null.
 	 * Upon violation, a {@code NullPointerException} with the given message is thrown.
 	 *
-	 * @param reference The object reference
+	 * @param reference    The object reference
 	 * @param errorMessage The message for the {@code NullPointerException} that is thrown if the check fails.
 	 * @return The object reference itself (generically typed).
-	 *
 	 * @throws NullPointerException Thrown, if the passed reference was null.
 	 */
 	public static <T> T checkNotNull(T reference, @Nullable String errorMessage) {
@@ -80,25 +80,23 @@ public final class Preconditions {
 	/**
 	 * Ensures that the given object reference is not null.
 	 * Upon violation, a {@code NullPointerException} with the given message is thrown.
-	 *
+	 * <p>
 	 * <p>The error message is constructed from a template and an arguments array, after
 	 * a similar fashion as {@link String#format(String, Object...)}, but supporting only
 	 * {@code %s} as a placeholder.
 	 *
-	 * @param reference The object reference
+	 * @param reference            The object reference
 	 * @param errorMessageTemplate The message template for the {@code NullPointerException}
 	 *                             that is thrown if the check fails. The template substitutes its
 	 *                             {@code %s} placeholders with the error message arguments.
-	 * @param errorMessageArgs The arguments for the error message, to be inserted into the
-	 *                         message template for the {@code %s} placeholders.
-	 *
+	 * @param errorMessageArgs     The arguments for the error message, to be inserted into the
+	 *                             message template for the {@code %s} placeholders.
 	 * @return The object reference itself (generically typed).
-	 *
 	 * @throws NullPointerException Thrown, if the passed reference was null.
 	 */
 	public static <T> T checkNotNull(T reference,
-				@Nullable String errorMessageTemplate,
-				@Nullable Object... errorMessageArgs) {
+									 @Nullable String errorMessageTemplate,
+									 @Nullable Object... errorMessageArgs) {
 
 		if (reference == null) {
 			throw new NullPointerException(format(errorMessageTemplate, errorMessageArgs));
@@ -115,7 +113,6 @@ public final class Preconditions {
 	 * the condition is not met (evaluates to {@code false}).
 	 *
 	 * @param condition The condition to check
-	 *
 	 * @throws IllegalArgumentException Thrown, if the condition is violated.
 	 */
 	public static void checkArgument(boolean condition) {
@@ -129,9 +126,8 @@ public final class Preconditions {
 	 * the condition is not met (evaluates to {@code false}). The exception will have the
 	 * given error message.
 	 *
-	 * @param condition The condition to check
+	 * @param condition    The condition to check
 	 * @param errorMessage The message for the {@code IllegalArgumentException} that is thrown if the check fails.
-	 *
 	 * @throws IllegalArgumentException Thrown, if the condition is violated.
 	 */
 	public static void checkArgument(boolean condition, @Nullable Object errorMessage) {
@@ -144,18 +140,17 @@ public final class Preconditions {
 	 * Checks the given boolean condition, and throws an {@code IllegalArgumentException} if
 	 * the condition is not met (evaluates to {@code false}).
 	 *
-	 * @param condition The condition to check
+	 * @param condition            The condition to check
 	 * @param errorMessageTemplate The message template for the {@code IllegalArgumentException}
 	 *                             that is thrown if the check fails. The template substitutes its
 	 *                             {@code %s} placeholders with the error message arguments.
-	 * @param errorMessageArgs The arguments for the error message, to be inserted into the
-	 *                         message template for the {@code %s} placeholders.
-	 *
+	 * @param errorMessageArgs     The arguments for the error message, to be inserted into the
+	 *                             message template for the {@code %s} placeholders.
 	 * @throws IllegalArgumentException Thrown, if the condition is violated.
 	 */
 	public static void checkArgument(boolean condition,
-			@Nullable String errorMessageTemplate,
-			@Nullable Object... errorMessageArgs) {
+									 @Nullable String errorMessageTemplate,
+									 @Nullable Object... errorMessageArgs) {
 
 		if (!condition) {
 			throw new IllegalArgumentException(format(errorMessageTemplate, errorMessageArgs));
@@ -171,7 +166,6 @@ public final class Preconditions {
 	 * the condition is not met (evaluates to {@code false}).
 	 *
 	 * @param condition The condition to check
-	 *
 	 * @throws IllegalStateException Thrown, if the condition is violated.
 	 */
 	public static void checkState(boolean condition) {
@@ -185,9 +179,8 @@ public final class Preconditions {
 	 * the condition is not met (evaluates to {@code false}). The exception will have the
 	 * given error message.
 	 *
-	 * @param condition The condition to check
+	 * @param condition    The condition to check
 	 * @param errorMessage The message for the {@code IllegalStateException} that is thrown if the check fails.
-	 *
 	 * @throws IllegalStateException Thrown, if the condition is violated.
 	 */
 	public static void checkState(boolean condition, @Nullable Object errorMessage) {
@@ -200,18 +193,17 @@ public final class Preconditions {
 	 * Checks the given boolean condition, and throws an {@code IllegalStateException} if
 	 * the condition is not met (evaluates to {@code false}).
 	 *
-	 * @param condition The condition to check
+	 * @param condition            The condition to check
 	 * @param errorMessageTemplate The message template for the {@code IllegalStateException}
 	 *                             that is thrown if the check fails. The template substitutes its
 	 *                             {@code %s} placeholders with the error message arguments.
-	 * @param errorMessageArgs The arguments for the error message, to be inserted into the
-	 *                         message template for the {@code %s} placeholders.
-	 *
+	 * @param errorMessageArgs     The arguments for the error message, to be inserted into the
+	 *                             message template for the {@code %s} placeholders.
 	 * @throws IllegalStateException Thrown, if the condition is violated.
 	 */
 	public static void checkState(boolean condition,
-			@Nullable String errorMessageTemplate,
-			@Nullable Object... errorMessageArgs) {
+								  @Nullable String errorMessageTemplate,
+								  @Nullable Object... errorMessageArgs) {
 
 		if (!condition) {
 			throw new IllegalStateException(format(errorMessageTemplate, errorMessageArgs));
@@ -222,11 +214,10 @@ public final class Preconditions {
 	 * Ensures that the given index is valid for an array, list or string of the given size.
 	 *
 	 * @param index index to check
-	 * @param size size of the array, list or string
-	 *
-	 * @throws IllegalArgumentException Thrown, if size is negative.
+	 * @param size  size of the array, list or string
+	 * @throws IllegalArgumentException  Thrown, if size is negative.
 	 * @throws IndexOutOfBoundsException Thrown, if the index negative or greater than or equal to size
-     */
+	 */
 	public static void checkElementIndex(int index, int size) {
 		checkArgument(size >= 0, "Size was negative.");
 		if (index < 0 || index >= size) {
@@ -237,11 +228,10 @@ public final class Preconditions {
 	/**
 	 * Ensures that the given index is valid for an array, list or string of the given size.
 	 *
-	 * @param index index to check
-	 * @param size size of the array, list or string
+	 * @param index        index to check
+	 * @param size         size of the array, list or string
 	 * @param errorMessage The message for the {@code IndexOutOfBoundsException} that is thrown if the check fails.
-	 *
-	 * @throws IllegalArgumentException Thrown, if size is negative.
+	 * @throws IllegalArgumentException  Thrown, if size is negative.
 	 * @throws IndexOutOfBoundsException Thrown, if the index negative or greater than or equal to size
 	 */
 	public static void checkElementIndex(int index, int size, @Nullable String errorMessage) {
@@ -258,7 +248,7 @@ public final class Preconditions {
 	/**
 	 * A simplified formatting method. Similar to {@link String#format(String, Object...)}, but
 	 * with lower overhead (only String parameters, no locale, no format validation).
-	 *
+	 * <p>
 	 * <p>This method is taken quasi verbatim from the Guava Preconditions class.
 	 */
 	private static String format(@Nullable String template, @Nullable Object... args) {
@@ -296,6 +286,9 @@ public final class Preconditions {
 
 	// ------------------------------------------------------------------------
 
-	/** Private constructor to prevent instantiation. */
-	private Preconditions() {}
+	/**
+	 * Private constructor to prevent instantiation.
+	 */
+	private Preconditions() {
+	}
 }

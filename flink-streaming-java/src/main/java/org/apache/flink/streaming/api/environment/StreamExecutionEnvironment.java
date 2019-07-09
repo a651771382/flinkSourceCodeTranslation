@@ -1514,6 +1514,8 @@ public abstract class StreamExecutionEnvironment {
 	 * program is currently executed. If the program is invoked standalone, this
 	 * method returns a local execution environment, as returned by
 	 * {@link #createLocalEnvironment()}.
+	 * 创建一个执行环境，表示当前的程序的上下文，如果程序是单独调用的，则此方法
+	 * 由createLocalEnvironment()返回本地执行环境
 	 *
 	 * @return The execution environment of the context in which the program is
 	 * executed.
