@@ -37,6 +37,7 @@ import java.util.concurrent.Future;
 /**
  * DistributedCache provides static methods to write the registered cache files into job configuration or decode
  * them from job configuration. It also provides user access to the file locally.
+ * DistributedCache提供静态方法将已注册的缓存文件写入作业配置或从作业配置解码它们。 它还为用户提供本地文件的访问权限。
  */
 @Public
 public class DistributedCache {
@@ -53,14 +54,18 @@ public class DistributedCache {
      */
 	public static class DistributedCacheEntry implements Serializable {
 
+		//文件路径
 		public String filePath;
+		//是否可执行
 		public Boolean isExecutable;
+		//是否已压缩
 		public boolean isZipped;
 
 		public byte[] blobKey;
 
 		/**
 		 * Client-side constructor used by the API for initial registration.
+		 * API用于初始化的客户端构造函数。
 		 */
 		public DistributedCacheEntry(String filePath, Boolean isExecutable) {
 			this(filePath, isExecutable, null);
@@ -68,6 +73,7 @@ public class DistributedCache {
 
 		/**
 		 * Client-side constructor used during job-submission for zipped directory.
+		 * 在压缩目录的作业提交期间使用的客户端构造函数。
 		 */
 		public DistributedCacheEntry(String filePath, boolean isExecutable, boolean isZipped) {
 			this(filePath, isExecutable, null, isZipped);
@@ -75,6 +81,7 @@ public class DistributedCache {
 
 		/**
 		 * Server-side constructor used during job-submission for zipped directories.
+		 * 在压缩目录的作业提交期间使用的客户端构造函数。
 		 */
 		public DistributedCacheEntry(String filePath, Boolean isExecutable, byte[] blobKey, boolean isZipped) {
 			this.filePath = filePath;
@@ -85,6 +92,7 @@ public class DistributedCache {
 
 		/**
 		 * Server-side constructor used during job-submission for files.
+		 * 在作业提交期间用于文件的服务器端构造函数。
 		 */
 		public DistributedCacheEntry(String filePath, Boolean isExecutable, byte[] blobKey) {
 			this(filePath, isExecutable, blobKey, false);
@@ -103,6 +111,7 @@ public class DistributedCache {
 
 	// ------------------------------------------------------------------------
 
+	//缓存复制任务
 	private final Map<String, Future<Path>> cacheCopyTasks;
 
 	public DistributedCache(Map<String, Future<Path>> cacheCopyTasks) {
@@ -169,15 +178,21 @@ public class DistributedCache {
 		return cacheFiles.entrySet();
 	}
 
+	//缓存文件编号
 	private static final String CACHE_FILE_NUM = "DISTRIBUTED_CACHE_FILE_NUM";
 
+	//缓存文件名
 	private static final String CACHE_FILE_NAME = "DISTRIBUTED_CACHE_FILE_NAME_";
 
+	//缓存文件路径
 	private static final String CACHE_FILE_PATH = "DISTRIBUTED_CACHE_FILE_PATH_";
 
+	//缓存文件exe
 	private static final String CACHE_FILE_EXE = "DISTRIBUTED_CACHE_FILE_EXE_";
 
+	//缓存文件目录
 	private static final String CACHE_FILE_DIR = "DISTRIBUTED_CACHE_FILE_DIR_";
 
+	//缓存文件blob key
 	private static final String CACHE_FILE_BLOB_KEY = "DISTRIBUTED_CACHE_FILE_BLOB_KEY_";
 }

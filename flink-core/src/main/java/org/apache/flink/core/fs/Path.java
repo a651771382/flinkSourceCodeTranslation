@@ -38,7 +38,7 @@ import java.util.regex.Pattern;
 /**
  * Names a file or directory in a {@link FileSystem}. Path strings use slash as
  * the directory separator. A path string is absolute if it begins with a slash.
- *
+ * <p>
  * <p>Tailing slashes are removed from the path.
  */
 @Public
@@ -58,10 +58,13 @@ public class Path implements IOReadableWritable, Serializable {
 
 	/**
 	 * Character denoting the current directory.
+	 * 表示当前目录的字符。
 	 */
 	public static final String CUR_DIR = ".";
 
-	/** A pre-compiled regex/state-machine to match the windows drive pattern. */
+	/**
+	 * A pre-compiled regex/state-machine to match the windows drive pattern.
+	 */
 	private static final Pattern WINDOWS_ROOT_DIR_REGEX = Pattern.compile("/\\p{Alpha}+:/");
 
 	/**
@@ -72,13 +75,13 @@ public class Path implements IOReadableWritable, Serializable {
 	/**
 	 * Constructs a new (empty) path object (used to reconstruct path object after RPC call).
 	 */
-	public Path() {}
+	public Path() {
+	}
 
 	/**
 	 * Constructs a path object from a given URI.
 	 *
-	 * @param uri
-	 *        the URI to construct the path object from
+	 * @param uri the URI to construct the path object from
 	 */
 	public Path(URI uri) {
 		this.uri = uri;
@@ -87,10 +90,8 @@ public class Path implements IOReadableWritable, Serializable {
 	/**
 	 * Resolve a child path against a parent path.
 	 *
-	 * @param parent
-	 *        the parent path
-	 * @param child
-	 *        the child path
+	 * @param parent the parent path
+	 * @param child  the child path
 	 */
 	public Path(String parent, String child) {
 		this(new Path(parent), new Path(child));
@@ -99,10 +100,8 @@ public class Path implements IOReadableWritable, Serializable {
 	/**
 	 * Resolve a child path against a parent path.
 	 *
-	 * @param parent
-	 *        the parent path
-	 * @param child
-	 *        the child path
+	 * @param parent the parent path
+	 * @param child  the child path
 	 */
 	public Path(Path parent, String child) {
 		this(parent, new Path(child));
@@ -111,10 +110,8 @@ public class Path implements IOReadableWritable, Serializable {
 	/**
 	 * Resolve a child path against a parent path.
 	 *
-	 * @param parent
-	 *        the parent path
-	 * @param child
-	 *        the child path
+	 * @param parent the parent path
+	 * @param child  the child path
 	 */
 	public Path(String parent, Path child) {
 		this(new Path(parent), child);
@@ -123,10 +120,8 @@ public class Path implements IOReadableWritable, Serializable {
 	/**
 	 * Resolve a child path against a parent path.
 	 *
-	 * @param parent
-	 *        the parent path
-	 * @param child
-	 *        the child path
+	 * @param parent the parent path
+	 * @param child  the child path
 	 */
 	public Path(Path parent, Path child) {
 		// Add a slash to parent's path so resolution is compatible with URI's
@@ -154,8 +149,7 @@ public class Path implements IOReadableWritable, Serializable {
 	 * a {@link IllegalArgumentException} if any of the two conditions apply.
 	 * In addition, leading and tailing whitespaces are removed.
 	 *
-	 * @param path
-	 *        the path string to be checked
+	 * @param path the path string to be checked
 	 * @return The checked and trimmed path.
 	 */
 	private String checkAndTrimPathArg(String path) {
@@ -174,8 +168,7 @@ public class Path implements IOReadableWritable, Serializable {
 	 * Construct a path from a String. Path strings are URIs, but with unescaped
 	 * elements and some additional normalization.
 	 *
-	 * @param pathString
-	 *        the string to construct a path from
+	 * @param pathString the string to construct a path from
 	 */
 	public Path(String pathString) {
 		pathString = checkAndTrimPathArg(pathString);
@@ -220,12 +213,9 @@ public class Path implements IOReadableWritable, Serializable {
 	/**
 	 * Construct a Path from a scheme, an authority and a path string.
 	 *
-	 * @param scheme
-	 *        the scheme string
-	 * @param authority
-	 *        the authority string
-	 * @param path
-	 *        the path string
+	 * @param scheme    the scheme string
+	 * @param authority the authority string
+	 * @param path      the path string
 	 */
 	public Path(String scheme, String authority, String path) {
 		path = checkAndTrimPathArg(path);
@@ -235,12 +225,9 @@ public class Path implements IOReadableWritable, Serializable {
 	/**
 	 * Initializes a path object given the scheme, authority and path string.
 	 *
-	 * @param scheme
-	 *        the scheme string.
-	 * @param authority
-	 *        the authority string.
-	 * @param path
-	 *        the path string.
+	 * @param scheme    the scheme string.
+	 * @param authority the authority string.
+	 * @param path      the path string.
 	 */
 	private void initialize(String scheme, String authority, String path) {
 		try {
@@ -253,8 +240,7 @@ public class Path implements IOReadableWritable, Serializable {
 	/**
 	 * Normalizes a path string.
 	 *
-	 * @param path
-	 *        the path string to normalize
+	 * @param path the path string to normalize
 	 * @return the normalized path string
 	 */
 	private String normalizePath(String path) {
@@ -268,8 +254,8 @@ public class Path implements IOReadableWritable, Serializable {
 
 		// remove tailing separator
 		if (path.endsWith(SEPARATOR) &&
-				!path.equals(SEPARATOR) &&              // UNIX root path
-				!WINDOWS_ROOT_DIR_REGEX.matcher(path).matches()) {  // Windows root path)
+			!path.equals(SEPARATOR) &&              // UNIX root path
+			!WINDOWS_ROOT_DIR_REGEX.matcher(path).matches()) {  // Windows root path)
 
 			// remove tailing slash
 			path = path.substring(0, path.length() - SEPARATOR.length());
@@ -291,8 +277,7 @@ public class Path implements IOReadableWritable, Serializable {
 	 * Returns the FileSystem that owns this Path.
 	 *
 	 * @return the FileSystem that owns this Path
-	 * @throws IOException
-	 *         thrown if the file system could not be retrieved
+	 * @throws IOException thrown if the file system could not be retrieved
 	 */
 	public FileSystem getFileSystem() throws IOException {
 		return FileSystem.get(this.toUri());
@@ -300,6 +285,7 @@ public class Path implements IOReadableWritable, Serializable {
 
 	/**
 	 * Checks if the directory of this path is absolute.
+	 * 检查此路径的目录是否为绝对目录。
 	 *
 	 * @return <code>true</code> if the directory of this path is absolute, <code>false</code> otherwise
 	 */
@@ -310,6 +296,7 @@ public class Path implements IOReadableWritable, Serializable {
 
 	/**
 	 * Returns the final component of this path, i.e., everything that follows the last separator.
+	 * 返回此路径的最后一个组件，即最后一个分隔符后面的所有内容。
 	 *
 	 * @return the final component of the path
 	 */
@@ -321,6 +308,8 @@ public class Path implements IOReadableWritable, Serializable {
 
 	/**
 	 * Return full path.
+	 * 返回完整路径。
+	 *
 	 * @return full path
 	 */
 	public String getPath() {
@@ -330,6 +319,7 @@ public class Path implements IOReadableWritable, Serializable {
 	/**
 	 * Returns the parent of a path, i.e., everything that precedes the last separator
 	 * or <code>null</code> if at root.
+	 * 返回路径的父级，即最后一个分隔符之前的所有内容，如果是root，则返回null。
 	 *
 	 * @return the parent of a path or <code>null</code> if at root.
 	 */
@@ -423,10 +413,11 @@ public class Path implements IOReadableWritable, Serializable {
 
 	/**
 	 * Returns a qualified path object.
+	 * 返回给定路径对象
 	 *
-	 * @param fs
-	 *        the FileSystem that should be used to obtain the current working directory
-	 * @return the qualified path object
+	 * @param fs the FileSystem that should be used to obtain the current working directory
+	 *           用于获取当前工作目录的文件系统
+	 * @return the qualified path object  指定路径对象
 	 */
 	public Path makeQualified(FileSystem fs) {
 		Path path = this;
@@ -513,21 +504,19 @@ public class Path implements IOReadableWritable, Serializable {
 
 	/**
 	 * Checks if the provided path string contains a windows drive letter.
+	 * 检查提供的路径字符串是否包含Windows驱动器号。
 	 *
-	 * @param path
-	 *        the path to check
-	 * @param slashed
-	 *         true to indicate the first character of the string is a slash, false otherwise
-	 *
+	 * @param path    the path to check
+	 * @param slashed true to indicate the first character of the string is a slash, false otherwise
 	 * @return <code>true</code> if the path string contains a windows drive letter, false otherwise
 	 */
 	private boolean hasWindowsDrive(String path, boolean slashed) {
 		final int start = slashed ? 1 : 0;
 		return path.length() >= start + 2
-				&& (!slashed || path.charAt(0) == '/')
-				&& path.charAt(start + 1) == ':'
-				&& ((path.charAt(start) >= 'A' && path.charAt(start) <= 'Z') || (path.charAt(start) >= 'a' && path
-				.charAt(start) <= 'z'));
+			&& (!slashed || path.charAt(0) == '/')
+			&& path.charAt(start + 1) == ':'
+			&& ((path.charAt(start) >= 'A' && path.charAt(start) <= 'Z') || (path.charAt(start) >= 'a' && path
+			.charAt(start) <= 'z'));
 	}
 
 	// ------------------------------------------------------------------------
@@ -536,7 +525,7 @@ public class Path implements IOReadableWritable, Serializable {
 
 	/**
 	 * Creates a path for the given local file.
-	 *
+	 * <p>
 	 * <p>This method is useful to make sure the path creation for local files works
 	 * seamlessly across different operating systems. Especially Windows has slightly
 	 * different rules for slashes between schema and a local file path, making it

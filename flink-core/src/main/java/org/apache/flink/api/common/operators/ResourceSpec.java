@@ -31,19 +31,19 @@ import java.util.Objects;
 
 /**
  * Describe the different resource factors of the operator with UDF.
- *
+ * <p>
  * <p>The state backend provides the method to estimate memory usages based on state size in the resource.
- *
+ * <p>
  * <p>Resource provides {@link #merge(ResourceSpec)} method for chained operators when generating job graph.
- *
+ * <p>
  * <p>Resource provides {@link #lessThanOrEqual(ResourceSpec)} method to compare these fields in sequence:
  * <ol>
- *     <li>CPU cores</li>
- *     <li>Heap Memory Size</li>
- *     <li>Direct Memory Size</li>
- *     <li>Native Memory Size</li>
- *     <li>State Size</li>
- *     <li>Extended resources</li>
+ * <li>CPU cores</li>
+ * <li>Heap Memory Size</li>
+ * <li>Direct Memory Size</li>
+ * <li>Native Memory Size</li>
+ * <li>State Size</li>
+ * <li>Extended resources</li>
  * </ol>
  */
 @Internal
@@ -55,40 +55,63 @@ public class ResourceSpec implements Serializable {
 
 	public static final String GPU_NAME = "GPU";
 
-	/** How many cpu cores are needed, use double so we can specify cpu like 0.1. */
+	/**
+	 * How many cpu cores are needed, use double so we can specify cpu like 0.1.
+	 * 需要多少个CPU内核，请使用double，这样我们可以像0.1那样指定CPU。
+	 */
 	private final double cpuCores;
 
-	/** How many java heap memory in mb are needed. */
+	/**
+	 * How many java heap memory in mb are needed.
+	 * 需要多少个mb的Java堆内存。
+	 */
 	private final int heapMemoryInMB;
 
-	/** How many nio direct memory in mb are needed. */
+	/**
+	 * How many nio direct memory in mb are needed.
+	 * 需要多少以MB为单位的NIO直接内存。
+	 */
 	private final int directMemoryInMB;
 
-	/** How many native memory in mb are needed. */
+	/**
+	 * How many native memory in mb are needed.
+	 * 需要多少mb的本机内存。
+	 */
 	private final int nativeMemoryInMB;
 
-	/** How many state size in mb are used. */
+	/**
+	 * How many state size in mb are used.
+	 * 使用了多少状态大小（MB）。
+	 */
 	private final int stateSizeInMB;
 
+	//拓展资源
 	private final Map<String, Resource> extendedResources = new HashMap<>(1);
 
 	/**
 	 * Creates a new ResourceSpec with full resources.
+	 * 创建具有完整资源的新资源规范。
 	 *
-	 * @param cpuCores The number of CPU cores (possibly fractional, i.e., 0.2 cores)
-	 * @param heapMemoryInMB The size of the java heap memory, in megabytes.
-	 * @param directMemoryInMB The size of the java nio direct memory, in megabytes.
-	 * @param nativeMemoryInMB The size of the native memory, in megabytes.
-	 * @param stateSizeInMB The state size for storing in checkpoint.
+	 * @param cpuCores          The number of CPU cores (possibly fractional, i.e., 0.2 cores)
+	 *                          CPU内核的数量（可能是小数，即0.2核）
+	 * @param heapMemoryInMB    The size of the java heap memory, in megabytes.
+	 *                          Java堆内存的大小，以兆字节为单位。
+	 * @param directMemoryInMB  The size of the java nio direct memory, in megabytes.
+	 *                          java nio直接内存的大小，以兆字节为单位。
+	 * @param nativeMemoryInMB  The size of the native memory, in megabytes.
+	 *                          本机内存的大小，以兆字节为单位。
+	 * @param stateSizeInMB     The state size for storing in checkpoint.
+	 *                          用于存储在检查点中的状态大小。
 	 * @param extendedResources The extended resources, associated with the resource manager used
+	 *                          与使用的资源管理器关联的扩展资源
 	 */
 	protected ResourceSpec(
-			double cpuCores,
-			int heapMemoryInMB,
-			int directMemoryInMB,
-			int nativeMemoryInMB,
-			int stateSizeInMB,
-			Resource... extendedResources) {
+		double cpuCores,
+		int heapMemoryInMB,
+		int directMemoryInMB,
+		int nativeMemoryInMB,
+		int stateSizeInMB,
+		Resource... extendedResources) {
 		this.cpuCores = cpuCores;
 		this.heapMemoryInMB = heapMemoryInMB;
 		this.directMemoryInMB = directMemoryInMB;
@@ -104,17 +127,20 @@ public class ResourceSpec implements Serializable {
 	/**
 	 * Used by system internally to merge the other resources of chained operators
 	 * when generating the job graph or merge the resource consumed by state backend.
+	 * 由系统内部用于在生成作业图时合并被链接操作员的其他资源或合并状态后端消耗的资源。
 	 *
 	 * @param other Reference to resource to merge in.
+	 *              引用要合并的资源。
 	 * @return The new resource with merged values.
+	 * 具有合并值的新资源
 	 */
 	public ResourceSpec merge(ResourceSpec other) {
 		ResourceSpec target = new ResourceSpec(
-				Math.max(this.cpuCores, other.cpuCores),
-				this.heapMemoryInMB + other.heapMemoryInMB,
-				this.directMemoryInMB + other.directMemoryInMB,
-				this.nativeMemoryInMB + other.nativeMemoryInMB,
-				this.stateSizeInMB + other.stateSizeInMB);
+			Math.max(this.cpuCores, other.cpuCores),
+			this.heapMemoryInMB + other.heapMemoryInMB,
+			this.directMemoryInMB + other.directMemoryInMB,
+			this.nativeMemoryInMB + other.nativeMemoryInMB,
+			this.stateSizeInMB + other.stateSizeInMB);
 		target.extendedResources.putAll(extendedResources);
 		for (Resource resource : other.extendedResources.values()) {
 			target.extendedResources.merge(resource.getName(), resource, (v1, v2) -> v1.merge(v2));
@@ -157,12 +183,14 @@ public class ResourceSpec implements Serializable {
 
 	/**
 	 * Check whether all the field values are valid.
+	 * 检查所有字段值是否有效。
 	 *
 	 * @return True if all the values are equal or greater than 0, otherwise false.
+	 * 如果所有值都等于或大于0，则为true，否则为false。
 	 */
 	public boolean isValid() {
 		if (this.cpuCores >= 0 && this.heapMemoryInMB >= 0 && this.directMemoryInMB >= 0 &&
-				this.nativeMemoryInMB >= 0 && this.stateSizeInMB >= 0) {
+			this.nativeMemoryInMB >= 0 && this.stateSizeInMB >= 0) {
 			for (Resource resource : extendedResources.values()) {
 				if (resource.getValue() < 0) {
 					return false;
@@ -177,9 +205,12 @@ public class ResourceSpec implements Serializable {
 	/**
 	 * Checks the current resource less than or equal with the other resource by comparing
 	 * all the fields in the resource.
+	 * 通过比较资源中的所有字段，检查当前资源是否小于或等于其他资源。
 	 *
 	 * @param other The resource to compare
+	 *              要比较的资源
 	 * @return True if current resource is less than or equal with the other resource, otherwise return false.
+	 * 如果当前资源小于或等于其他资源，则为true，否则返回false。
 	 */
 	public boolean lessThanOrEqual(@Nonnull ResourceSpec other) {
 		int cmp1 = Double.compare(this.cpuCores, other.cpuCores);
@@ -191,7 +222,7 @@ public class ResourceSpec implements Serializable {
 			for (Resource resource : extendedResources.values()) {
 				if (!other.extendedResources.containsKey(resource.getName()) ||
 					other.extendedResources.get(resource.getName()).getResourceAggregateType() != resource.getResourceAggregateType() ||
-						other.extendedResources.get(resource.getName()).getValue() < resource.getValue()) {
+					other.extendedResources.get(resource.getName()).getValue() < resource.getValue()) {
 					return false;
 				}
 			}
@@ -207,11 +238,11 @@ public class ResourceSpec implements Serializable {
 		} else if (obj != null && obj.getClass() == ResourceSpec.class) {
 			ResourceSpec that = (ResourceSpec) obj;
 			return this.cpuCores == that.cpuCores &&
-					this.heapMemoryInMB == that.heapMemoryInMB &&
-					this.directMemoryInMB == that.directMemoryInMB &&
-					this.nativeMemoryInMB == that.nativeMemoryInMB &&
-					this.stateSizeInMB == that.stateSizeInMB &&
-					Objects.equals(this.extendedResources, that.extendedResources);
+				this.heapMemoryInMB == that.heapMemoryInMB &&
+				this.directMemoryInMB == that.directMemoryInMB &&
+				this.nativeMemoryInMB == that.nativeMemoryInMB &&
+				this.stateSizeInMB == that.stateSizeInMB &&
+				Objects.equals(this.extendedResources, that.extendedResources);
 		} else {
 			return false;
 		}
@@ -219,7 +250,7 @@ public class ResourceSpec implements Serializable {
 
 	@Override
 	public int hashCode() {
-		final long cpuBits =  Double.doubleToLongBits(cpuCores);
+		final long cpuBits = Double.doubleToLongBits(cpuCores);
 		int result = (int) (cpuBits ^ (cpuBits >>> 32));
 		result = 31 * result + heapMemoryInMB;
 		result = 31 * result + directMemoryInMB;
@@ -236,12 +267,12 @@ public class ResourceSpec implements Serializable {
 			extend += ", " + resource.getName() + "=" + resource.getValue();
 		}
 		return "ResourceSpec{" +
-				"cpuCores=" + cpuCores +
-				", heapMemoryInMB=" + heapMemoryInMB +
-				", directMemoryInMB=" + directMemoryInMB +
-				", nativeMemoryInMB=" + nativeMemoryInMB +
-				", stateSizeInMB=" + stateSizeInMB + extend +
-				'}';
+			"cpuCores=" + cpuCores +
+			", heapMemoryInMB=" + heapMemoryInMB +
+			", directMemoryInMB=" + directMemoryInMB +
+			", nativeMemoryInMB=" + nativeMemoryInMB +
+			", stateSizeInMB=" + stateSizeInMB + extend +
+			'}';
 	}
 
 	public static Builder newBuilder() {

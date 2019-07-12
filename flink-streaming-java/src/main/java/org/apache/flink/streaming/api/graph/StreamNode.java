@@ -38,6 +38,7 @@ import java.util.List;
 
 /**
  * Class representing the operators in the streaming programs, with all their properties.
+ * 表示流程序中的运算符及其所有属性。
  */
 @Internal
 public class StreamNode implements Serializable {
@@ -45,22 +46,35 @@ public class StreamNode implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private final int id;
+	//并行度
 	private int parallelism;
 	/**
 	 * Maximum parallelism for this stream node. The maximum parallelism is the upper limit for
 	 * dynamic scaling and the number of key groups used for partitioned state.
 	 */
 	private int maxParallelism;
+	//最小资源
 	private ResourceSpec minResources = ResourceSpec.DEFAULT;
+	//首选资源
 	private ResourceSpec preferredResources = ResourceSpec.DEFAULT;
+	//缓冲超时
 	private long bufferTimeout;
+	//操作名称
 	private final String operatorName;
-	private @Nullable String slotSharingGroup;
-	private @Nullable String coLocationGroup;
+	//插槽共享组
+	private @Nullable
+	String slotSharingGroup;
+	//定位组
+	private @Nullable
+	String coLocationGroup;
+	//状态分区1
 	private KeySelector<?, ?> statePartitioner1;
+	//状态分区2
 	private KeySelector<?, ?> statePartitioner2;
+	//状态分区3
 	private TypeSerializer<?> stateKeySerializer;
 
+	//操作工厂
 	private transient StreamOperatorFactory<?> operatorFactory;
 	private List<OutputSelector<?>> outputSelectors;
 	private TypeSerializer<?> typeSerializerIn1;
@@ -80,15 +94,15 @@ public class StreamNode implements Serializable {
 
 	@VisibleForTesting
 	public StreamNode(
-			Integer id,
-			@Nullable String slotSharingGroup,
-			@Nullable String coLocationGroup,
-			StreamOperator<?> operator,
-			String operatorName,
-			List<OutputSelector<?>> outputSelector,
-			Class<? extends AbstractInvokable> jobVertexClass) {
+		Integer id,
+		@Nullable String slotSharingGroup,
+		@Nullable String coLocationGroup,
+		StreamOperator<?> operator,
+		String operatorName,
+		List<OutputSelector<?>> outputSelector,
+		Class<? extends AbstractInvokable> jobVertexClass) {
 		this(id, slotSharingGroup, coLocationGroup, SimpleOperatorFactory.of(operator),
-				operatorName, outputSelector, jobVertexClass);
+			operatorName, outputSelector, jobVertexClass);
 	}
 
 	public StreamNode(
@@ -282,13 +296,14 @@ public class StreamNode implements Serializable {
 		this.coLocationGroup = coLocationGroup;
 	}
 
-	public @Nullable String getCoLocationGroup() {
+	public @Nullable
+	String getCoLocationGroup() {
 		return coLocationGroup;
 	}
 
 	public boolean isSameSlotSharingGroup(StreamNode downstreamVertex) {
 		return (slotSharingGroup == null && downstreamVertex.slotSharingGroup == null) ||
-				(slotSharingGroup != null && slotSharingGroup.equals(downstreamVertex.slotSharingGroup));
+			(slotSharingGroup != null && slotSharingGroup.equals(downstreamVertex.slotSharingGroup));
 	}
 
 	@Override

@@ -52,8 +52,10 @@ public class StreamContextEnvironment extends StreamExecutionEnvironment {
 	public JobExecutionResult execute(String jobName) throws Exception {
 		Preconditions.checkNotNull(jobName, "Streaming Job name should not be null.");
 
+		//
 		StreamGraph streamGraph = this.getStreamGraph(jobName);
 
+		//将存储的Transformation操作清空
 		transformations.clear();
 
 		// execute the programs

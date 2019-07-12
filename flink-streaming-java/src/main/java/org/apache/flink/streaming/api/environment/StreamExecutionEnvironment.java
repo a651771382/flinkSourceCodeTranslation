@@ -1443,9 +1443,10 @@ public abstract class StreamExecutionEnvironment {
 
 	/**
 	 * Getter of the {@link org.apache.flink.streaming.api.graph.StreamGraph} of the streaming job.
+	 * 获取到流作业
 	 *
-	 * @param jobName Desired name of the job
-	 * @return The streamgraph representing the transformations
+	 * @param jobName Desired name of the job 所需的作业名称
+	 * @return The streamgraph representing the transformations 转换的流程图
 	 */
 	@Internal
 	public StreamGraph getStreamGraph(String jobName) {

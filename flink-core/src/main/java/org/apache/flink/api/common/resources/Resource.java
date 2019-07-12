@@ -27,6 +27,7 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
 
 /**
  * Base class for resources one can specify.
+ * 可以指定资源的基类
  */
 @Internal
 public abstract class Resource implements Serializable {
@@ -35,15 +36,18 @@ public abstract class Resource implements Serializable {
 
 	/**
 	 * Enum defining how resources are aggregated.
+	 * 定义资源聚合方式的枚举。
 	 */
 	public enum ResourceAggregateType {
 		/**
 		 * Denotes keeping the sum of the values with same name when merging two resource specs for operator chaining.
+		 * 表示在合并两个用于运算符链接的资源规范时，保持名称相同的值的总和。
 		 */
 		AGGREGATE_TYPE_SUM,
 
 		/**
 		 * Denotes keeping the max of the values with same name when merging two resource specs for operator chaining.
+		 * 表示在合并两个用于运算符链接的资源规范时，保持同名值的最大值。
 		 */
 		AGGREGATE_TYPE_MAX
 	}
@@ -52,6 +56,7 @@ public abstract class Resource implements Serializable {
 
 	private final double value;
 
+	//资源聚合类型
 	private final ResourceAggregateType resourceAggregateType;
 
 	protected Resource(String name, double value, ResourceAggregateType type) {
@@ -67,7 +72,7 @@ public abstract class Resource implements Serializable {
 
 		final double aggregatedValue;
 		switch (resourceAggregateType) {
-			case AGGREGATE_TYPE_MAX :
+			case AGGREGATE_TYPE_MAX:
 				aggregatedValue = Math.max(other.value, this.value);
 				break;
 
@@ -114,9 +119,10 @@ public abstract class Resource implements Serializable {
 
 	/**
 	 * Create a resource of the same resource resourceAggregateType.
+	 * 创建具有相同资源ResourceAggregateType的资源。
 	 *
 	 * @param value The value of the resource
-	 * @param type The aggregate resourceAggregateType of the resource
+	 * @param type  The aggregate resourceAggregateType of the resource
 	 * @return A new instance of the sub resource
 	 */
 	protected abstract Resource create(double value, ResourceAggregateType type);

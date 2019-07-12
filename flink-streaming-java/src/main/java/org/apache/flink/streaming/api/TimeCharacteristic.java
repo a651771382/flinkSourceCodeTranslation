@@ -23,6 +23,7 @@ import org.apache.flink.annotation.PublicEvolving;
 /**
  * The time characteristic defines how the system determines time for time-dependent
  * order and operations that depend on time (such as time windows).
+ * 时间特性定义了系统如何确定时间相关顺序的时间以及依赖于时间的操作（如时间窗口）。
  */
 @PublicEvolving
 public enum TimeCharacteristic {

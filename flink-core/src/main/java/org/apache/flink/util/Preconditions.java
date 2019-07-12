@@ -125,6 +125,8 @@ public final class Preconditions {
 	 * Checks the given boolean condition, and throws an {@code IllegalArgumentException} if
 	 * the condition is not met (evaluates to {@code false}). The exception will have the
 	 * given error message.
+	 * 检查给定的布尔条件，如果条件不满足，则抛出@code illegalargumentexception（计算结果为@code false）。
+	 * 异常将具有给定的错误消息。
 	 *
 	 * @param condition    The condition to check
 	 * @param errorMessage The message for the {@code IllegalArgumentException} that is thrown if the check fails.

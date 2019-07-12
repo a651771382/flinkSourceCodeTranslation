@@ -73,30 +73,40 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
 /**
  * Class representing the streaming topology. It contains all the information
  * necessary to build the jobgraph for the execution.
- *
+ * 流的拓展类。它包含执行构建作业图所需的所有信息
  */
 @Internal
 public class StreamGraph extends StreamingPlan {
 
 	private static final Logger LOG = LoggerFactory.getLogger(StreamGraph.class);
 
+	//迭代源名称前缀
 	public static final String ITERATION_SOURCE_NAME_PREFIX = "IterationSource";
 
+	//迭代接收器名称前缀
 	public static final String ITERATION_SINK_NAME_PREFIX = "IterationSink";
 
+	//作业名称
 	private String jobName;
 
+	//执行配置
 	private final ExecutionConfig executionConfig;
+	//检查点配置
 	private final CheckpointConfig checkpointConfig;
 
+	//计划模式
 	private ScheduleMode scheduleMode;
 
+	//链接
 	private boolean chaining;
 
+	//用户项目
 	private Collection<Tuple2<String, DistributedCache.DistributedCacheEntry>> userArtifacts;
 
+	//时间特性
 	private TimeCharacteristic timeCharacteristic;
 
+	//流节点
 	private Map<Integer, StreamNode> streamNodes;
 	private Set<Integer> sources;
 	private Set<Integer> sinks;
@@ -126,7 +136,7 @@ public class StreamGraph extends StreamingPlan {
 		virtualSideOutputNodes = new HashMap<>();
 		virtualPartitionNodes = new HashMap<>();
 		vertexIDtoBrokerID = new HashMap<>();
-		vertexIDtoLoopTimeout  = new HashMap<>();
+		vertexIDtoLoopTimeout = new HashMap<>();
 		iterationSourceSinkPairs = new HashSet<>();
 		sources = new HashSet<>();
 		sinks = new HashSet<>();
@@ -195,35 +205,35 @@ public class StreamGraph extends StreamingPlan {
 	}
 
 	public <IN, OUT> void addSource(Integer vertexID,
-		@Nullable String slotSharingGroup,
-		@Nullable String coLocationGroup,
-		StreamOperatorFactory<OUT> operatorFactory,
-		TypeInformation<IN> inTypeInfo,
-		TypeInformation<OUT> outTypeInfo,
-		String operatorName) {
+									@Nullable String slotSharingGroup,
+									@Nullable String coLocationGroup,
+									StreamOperatorFactory<OUT> operatorFactory,
+									TypeInformation<IN> inTypeInfo,
+									TypeInformation<OUT> outTypeInfo,
+									String operatorName) {
 		addOperator(vertexID, slotSharingGroup, coLocationGroup, operatorFactory, inTypeInfo, outTypeInfo, operatorName);
 		sources.add(vertexID);
 	}
 
 	public <IN, OUT> void addSink(Integer vertexID,
+								  @Nullable String slotSharingGroup,
+								  @Nullable String coLocationGroup,
+								  StreamOperatorFactory<OUT> operatorFactory,
+								  TypeInformation<IN> inTypeInfo,
+								  TypeInformation<OUT> outTypeInfo,
+								  String operatorName) {
+		addOperator(vertexID, slotSharingGroup, coLocationGroup, operatorFactory, inTypeInfo, outTypeInfo, operatorName);
+		sinks.add(vertexID);
+	}
+
+	public <IN, OUT> void addOperator(
+		Integer vertexID,
 		@Nullable String slotSharingGroup,
 		@Nullable String coLocationGroup,
 		StreamOperatorFactory<OUT> operatorFactory,
 		TypeInformation<IN> inTypeInfo,
 		TypeInformation<OUT> outTypeInfo,
 		String operatorName) {
-		addOperator(vertexID, slotSharingGroup, coLocationGroup, operatorFactory, inTypeInfo, outTypeInfo, operatorName);
-		sinks.add(vertexID);
-	}
-
-	public <IN, OUT> void addOperator(
-			Integer vertexID,
-			@Nullable String slotSharingGroup,
-			@Nullable String coLocationGroup,
-			StreamOperatorFactory<OUT> operatorFactory,
-			TypeInformation<IN> inTypeInfo,
-			TypeInformation<OUT> outTypeInfo,
-			String operatorName) {
 
 		if (operatorFactory.isStreamSource()) {
 			addNode(vertexID, slotSharingGroup, coLocationGroup, SourceStreamTask.class, operatorFactory, operatorName);
@@ -252,14 +262,14 @@ public class StreamGraph extends StreamingPlan {
 	}
 
 	public <IN1, IN2, OUT> void addCoOperator(
-			Integer vertexID,
-			String slotSharingGroup,
-			@Nullable String coLocationGroup,
-			StreamOperatorFactory<OUT> taskOperatorFactory,
-			TypeInformation<IN1> in1TypeInfo,
-			TypeInformation<IN2> in2TypeInfo,
-			TypeInformation<OUT> outTypeInfo,
-			String operatorName) {
+		Integer vertexID,
+		String slotSharingGroup,
+		@Nullable String coLocationGroup,
+		StreamOperatorFactory<OUT> taskOperatorFactory,
+		TypeInformation<IN1> in1TypeInfo,
+		TypeInformation<IN2> in2TypeInfo,
+		TypeInformation<OUT> outTypeInfo,
+		String operatorName) {
 
 		Class<? extends AbstractInvokable> vertexClass = taskOperatorFactory.isOperatorSelectiveReading() ?
 			TwoInputSelectableStreamTask.class : TwoInputStreamTask.class;
@@ -267,7 +277,7 @@ public class StreamGraph extends StreamingPlan {
 		addNode(vertexID, slotSharingGroup, coLocationGroup, vertexClass, taskOperatorFactory, operatorName);
 
 		TypeSerializer<OUT> outSerializer = (outTypeInfo != null) && !(outTypeInfo instanceof MissingTypeInfo) ?
-				outTypeInfo.createSerializer(executionConfig) : null;
+			outTypeInfo.createSerializer(executionConfig) : null;
 
 		setSerializers(vertexID, in1TypeInfo.createSerializer(executionConfig), in2TypeInfo.createSerializer(executionConfig), outSerializer);
 
@@ -282,11 +292,11 @@ public class StreamGraph extends StreamingPlan {
 	}
 
 	protected StreamNode addNode(Integer vertexID,
-		@Nullable String slotSharingGroup,
-		@Nullable String coLocationGroup,
-		Class<? extends AbstractInvokable> vertexClass,
-		StreamOperatorFactory<?> operatorFactory,
-		String operatorName) {
+								 @Nullable String slotSharingGroup,
+								 @Nullable String coLocationGroup,
+								 Class<? extends AbstractInvokable> vertexClass,
+								 StreamOperatorFactory<?> operatorFactory,
+								 String operatorName) {
 
 		if (streamNodes.containsKey(vertexID)) {
 			throw new RuntimeException("Duplicate vertexID " + vertexID);
@@ -309,12 +319,12 @@ public class StreamGraph extends StreamingPlan {
 	/**
 	 * Adds a new virtual node that is used to connect a downstream vertex to only the outputs
 	 * with the selected names.
-	 *
+	 * <p>
 	 * <p>When adding an edge from the virtual node to a downstream node the connection will be made
 	 * to the original node, only with the selected names given here.
 	 *
-	 * @param originalId ID of the node that should be connected to.
-	 * @param virtualId ID of the virtual node.
+	 * @param originalId    ID of the node that should be connected to.
+	 * @param virtualId     ID of the virtual node.
 	 * @param selectedNames The selected names.
 	 */
 	public void addVirtualSelectNode(Integer originalId, Integer virtualId, List<String> selectedNames) {
@@ -324,7 +334,7 @@ public class StreamGraph extends StreamingPlan {
 		}
 
 		virtualSelectNodes.put(virtualId,
-				new Tuple2<Integer, List<String>>(originalId, selectedNames));
+			new Tuple2<Integer, List<String>>(originalId, selectedNames));
 	}
 
 	/**
@@ -332,8 +342,8 @@ public class StreamGraph extends StreamingPlan {
 	 * the selected side-output {@link OutputTag}.
 	 *
 	 * @param originalId ID of the node that should be connected to.
-	 * @param virtualId ID of the virtual node.
-	 * @param outputTag The selected side-output {@code OutputTag}.
+	 * @param virtualId  ID of the virtual node.
+	 * @param outputTag  The selected side-output {@code OutputTag}.
 	 */
 	public void addVirtualSideOutputNode(Integer originalId, Integer virtualId, OutputTag outputTag) {
 
@@ -353,10 +363,10 @@ public class StreamGraph extends StreamingPlan {
 			}
 
 			if (tag.f1.getId().equals(outputTag.getId()) &&
-					!tag.f1.getTypeInfo().equals(outputTag.getTypeInfo())) {
+				!tag.f1.getTypeInfo().equals(outputTag.getTypeInfo())) {
 				throw new IllegalArgumentException("Trying to add a side output for the same " +
-						"side-output id with a different type. This is not allowed. Side-output ID: " +
-						tag.f1.getId());
+					"side-output id with a different type. This is not allowed. Side-output ID: " +
+					tag.f1.getId());
 			}
 		}
 
@@ -366,19 +376,19 @@ public class StreamGraph extends StreamingPlan {
 	/**
 	 * Adds a new virtual node that is used to connect a downstream vertex to an input with a
 	 * certain partitioning.
-	 *
+	 * <p>
 	 * <p>When adding an edge from the virtual node to a downstream node the connection will be made
 	 * to the original node, but with the partitioning given here.
 	 *
-	 * @param originalId ID of the node that should be connected to.
-	 * @param virtualId ID of the virtual node.
+	 * @param originalId  ID of the node that should be connected to.
+	 * @param virtualId   ID of the virtual node.
 	 * @param partitioner The partitioner
 	 */
 	public void addVirtualPartitionNode(
-			Integer originalId,
-			Integer virtualId,
-			StreamPartitioner<?> partitioner,
-			ShuffleMode shuffleMode) {
+		Integer originalId,
+		Integer virtualId,
+		StreamPartitioner<?> partitioner,
+		ShuffleMode shuffleMode) {
 
 		if (virtualPartitionNodes.containsKey(virtualId)) {
 			throw new IllegalStateException("Already has virtual partition node with id " + virtualId);
@@ -408,22 +418,22 @@ public class StreamGraph extends StreamingPlan {
 
 	public void addEdge(Integer upStreamVertexID, Integer downStreamVertexID, int typeNumber) {
 		addEdgeInternal(upStreamVertexID,
-				downStreamVertexID,
-				typeNumber,
-				null,
-				new ArrayList<String>(),
-				null,
-				null);
+			downStreamVertexID,
+			typeNumber,
+			null,
+			new ArrayList<String>(),
+			null,
+			null);
 
 	}
 
 	private void addEdgeInternal(Integer upStreamVertexID,
-			Integer downStreamVertexID,
-			int typeNumber,
-			StreamPartitioner<?> partitioner,
-			List<String> outputNames,
-			OutputTag outputTag,
-			ShuffleMode shuffleMode) {
+								 Integer downStreamVertexID,
+								 int typeNumber,
+								 StreamPartitioner<?> partitioner,
+								 List<String> outputNames,
+								 OutputTag outputTag,
+								 ShuffleMode shuffleMode) {
 
 		if (virtualSideOutputNodes.containsKey(upStreamVertexID)) {
 			int virtualId = upStreamVertexID;
@@ -463,9 +473,9 @@ public class StreamGraph extends StreamingPlan {
 			if (partitioner instanceof ForwardPartitioner) {
 				if (upstreamNode.getParallelism() != downstreamNode.getParallelism()) {
 					throw new UnsupportedOperationException("Forward partitioning does not allow " +
-							"change of parallelism. Upstream operation: " + upstreamNode + " parallelism: " + upstreamNode.getParallelism() +
-							", downstream operation: " + downstreamNode + " parallelism: " + downstreamNode.getParallelism() +
-							" You must use another partitioning strategy, such as broadcast, rebalance, shuffle or global.");
+						"change of parallelism. Upstream operation: " + upstreamNode + " parallelism: " + upstreamNode.getParallelism() +
+						", downstream operation: " + downstreamNode + " parallelism: " + downstreamNode.getParallelism() +
+						" You must use another partitioning strategy, such as broadcast, rebalance, shuffle or global.");
 				}
 			}
 
@@ -719,8 +729,7 @@ public class StreamGraph extends StreamingPlan {
 	public String getStreamingPlanAsJSON() {
 		try {
 			return new JSONGenerator(this).getJSON();
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			throw new RuntimeException("JSON plan creation failed", e);
 		}
 	}

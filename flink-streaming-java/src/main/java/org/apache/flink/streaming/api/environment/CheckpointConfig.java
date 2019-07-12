@@ -124,6 +124,7 @@ public class CheckpointConfig implements java.io.Serializable {
 
 	/**
 	 * Checks whether checkpointing is enabled.
+	 * 检查是否启用了检查点。
 	 *
 	 * @return True if checkpointing is enables, false otherwise.
 	 */
@@ -133,6 +134,7 @@ public class CheckpointConfig implements java.io.Serializable {
 
 	/**
 	 * Gets the checkpointing mode (exactly-once vs. at-least-once).
+	 * 获取检查点模式（仅此一次、最少一次）
 	 *
 	 * @return The checkpointing mode.
 	 */
@@ -151,6 +153,7 @@ public class CheckpointConfig implements java.io.Serializable {
 
 	/**
 	 * Gets the interval in which checkpoints are periodically scheduled.
+	 * 获取定期检查检查点的时间间隔。
 	 * <p>
 	 * <p>This setting defines the base interval. Checkpoint triggering may be delayed by the settings
 	 * {@link #getMaxConcurrentCheckpoints()} and {@link #getMinPauseBetweenCheckpoints()}.
@@ -163,6 +166,7 @@ public class CheckpointConfig implements java.io.Serializable {
 
 	/**
 	 * Sets the interval in which checkpoints are periodically scheduled.
+	 * 设置定期检查检查点的时间间隔。
 	 * <p>
 	 * <p>This setting defines the base interval. Checkpoint triggering may be delayed by the settings
 	 * {@link #setMaxConcurrentCheckpoints(int)} and {@link #setMinPauseBetweenCheckpoints(long)}.
@@ -418,6 +422,7 @@ public class CheckpointConfig implements java.io.Serializable {
 		/**
 		 * Returns whether persistent checkpoints shall be discarded on
 		 * cancellation of the job.
+		 * 返回在取消作业时是否应丢弃持久性检查点
 		 *
 		 * @return <code>true</code> if persistent checkpoints shall be discarded
 		 * on cancellation of the job.
