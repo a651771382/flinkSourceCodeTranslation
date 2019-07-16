@@ -28,14 +28,18 @@ import org.apache.flink.types.StringValue;
 import java.io.IOException;
 
 /**
- * Type serializer for {@code String}.
+ * Type serializer for {@code String}
+ * 字符串的类型序列化程序.
  */
 @Internal
 public final class StringSerializer extends TypeSerializerSingleton<String> {
 
 	private static final long serialVersionUID = 1L;
 
-	/** Sharable instance of the StringSerializer. */
+	/**
+	 * Sharable instance of the StringSerializer.
+	 * StringSerializer的可共享实例。
+	 */
 	public static final StringSerializer INSTANCE = new StringSerializer();
 
 	private static final String EMPTY = "";

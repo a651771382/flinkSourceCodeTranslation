@@ -25,7 +25,8 @@ import org.apache.flink.util.FlinkRuntimeException;
 
 /**
  * A utility class for describing generic types. It can be used to obtain a type information via:
- *
+ * 用于描述泛型类型的实用程序类。 它可用于通过以下方式获取类型信息：
+ * <p>
  * <pre>{@code
  * TypeInformation<Tuple2<String, Long>> info = TypeInformation.of(new TypeHint<Tuple2<String, Long>>(){});
  * }</pre>
@@ -35,24 +36,28 @@ import org.apache.flink.util.FlinkRuntimeException;
  * }</pre>
  *
  * @param <T> The type information to hint.
+ *            要提示的类型信息。
  */
 @Public
 public abstract class TypeHint<T> {
 
-	/** The type information described by the hint. */
+	/**
+	 * The type information described by the hint.
+	 * 提示描述的类型信息。
+	 */
 	private final TypeInformation<T> typeInfo;
 
 	/**
 	 * Creates a hint for the generic type in the class signature.
+	 * 为类签名中的泛型类型创建提示。
 	 */
 	public TypeHint() {
 		try {
 			this.typeInfo = TypeExtractor.createTypeInfo(
-					this, TypeHint.class, getClass(), 0);
-		}
-		catch (InvalidTypesException e) {
+				this, TypeHint.class, getClass(), 0);
+		} catch (InvalidTypesException e) {
 			throw new FlinkRuntimeException("The TypeHint is using a generic variable." +
-					"This is not supported, generic types must be fully specified for the TypeHint.");
+				"This is not supported, generic types must be fully specified for the TypeHint.");
 		}
 	}
 
@@ -60,7 +65,10 @@ public abstract class TypeHint<T> {
 
 	/**
 	 * Gets the type information described by this TypeHint.
+	 * 获取此TypeHint描述的类型信息。
+	 *
 	 * @return The type information described by this TypeHint.
+	 * 此typehint描述的类型信息。
 	 */
 	public TypeInformation<T> getTypeInfo() {
 		return typeInfo;

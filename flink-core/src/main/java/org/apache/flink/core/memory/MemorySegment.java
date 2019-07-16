@@ -30,37 +30,53 @@ import java.nio.ReadOnlyBufferException;
 /**
  * This class represents a piece of memory managed by Flink.
  * The segment may be backed by heap memory (byte array) or by off-heap memory.
- *
+ * 此类表示由Flink管理的一块内存。
+ * 该段可以由堆内存（字节数组）或堆外内存支持。
+ * <p>
  * <p>The methods for individual memory access are specialized in the classes
  * {@link org.apache.flink.core.memory.HeapMemorySegment} and
  * {@link org.apache.flink.core.memory.HybridMemorySegment}.
  * All methods that operate across two memory segments are implemented in this class,
  * to transparently handle the mixing of memory segment types.
- *
+ * <p>
+ * 单个内存访问的方法专门用于类{@link org.apache.flink.core.memory.HeapMemorySegment}和
+ * {@link org.apache.flink.core.memory.HybridMemorySegment}。 跨两个内存段操作的所有方法都在此类中实现，
+ * 以透明地处理内存段类型的混合。
  * <p>This class fulfills conceptually a similar purpose as Java's {@link java.nio.ByteBuffer}.
  * We add this specialized class for various reasons:
+ * 这个类在概念上与Java的{@链接java. Nio。ByteBuffer }有类似的用途。我们添加这个特殊类的原因有很多：
  * <ul>
- *     <li>It offers additional binary compare, swap, and copy methods.</li>
- *     <li>It uses collapsed checks for range check and memory segment disposal.</li>
- *     <li>It offers absolute positioning methods for bulk put/get methods, to guarantee
- *         thread safe use.</li>
- *     <li>It offers explicit big-endian / little-endian access methods, rather than tracking internally
- *         a byte order.</li>
- *     <li>It transparently and efficiently moves data between on-heap and off-heap variants.</li>
+ * <li>It offers additional binary compare, swap, and copy methods.</li>
+ * 它提供了额外的二进制比较、交换和复制方法。
+ * <li>It uses collapsed checks for range check and memory segment disposal.</li>
+ * 它使用折叠检查进行范围检查和内存段处理。
+ * <li>It offers absolute positioning methods for bulk put/get methods, to guarantee
+ * thread safe use.</li>
+ * 它为批量放置/获取方法提供绝对定位方法，以保证线程安全使用。
+ * <li>It offers explicit big-endian / little-endian access methods, rather than tracking internally
+ * a byte order.</li>
+ * 它提供了显式的big-endian / little-endian访问方法，而不是内部跟踪字节顺序。
+ * <li>It transparently and efficiently moves data between on-heap and off-heap variants.</li>
+ * 它透明有效地在堆上和堆外变体之间移动数据。
  * </ul>
- *
- * <p><i>Comments on the implementation</i>:
+ * <p>
+ * <p><i>Comments on the implementation</i>:关于执行情况的评论
  * We make heavy use of operations that are supported by native
  * instructions, to achieve a high efficiency. Multi byte types (int, long, float, double, ...)
  * are read and written with "unsafe" native commands.
- *
+ * 我们大量使用本机指令支持的操作，以实现高效率。多字节类型（int、long、float、double，…）是用“不安全”的本地命令读写的。
+ * <p>
  * <p>Below is an example of the code generated for the {@link HeapMemorySegment#putLongBigEndian(int, long)}
  * function by the just-in-time compiler. The code is grabbed from an Oracle JVM 7 using the
  * hotspot disassembler library (hsdis32.dll) and the jvm command
  * <i>-XX:+UnlockDiagnosticVMOptions -XX:CompileCommand=print,*MemorySegment.putLongBigEndian</i>.
  * Note that this code realizes both the byte order swapping and the reinterpret cast access to
  * get a long from the byte array.
- *
+ * <p>
+ * 下面是即时编译器为{@link HeapMemorySegment #putLongBigEndian（int，long）}函数生成的代码示例。
+ * 使用热点反汇编程序库（hsdis32.dll）和jvm命令<i> -XX：+ UnlockDiagnosticVMOptions -XX：
+ * CompileCommand = print，* MemorySegment.putLongBigEndian </ i>从Oracle JVM 7获取代码。
+ * 请注意，此代码实现了字节顺序交换和重新解释转换访问，以从字节数组中获取长整数
  * <p><pre>
  * [Verified Entry Point]
  *   0x00007fc403e19920: sub    $0x18,%rsp
@@ -81,23 +97,28 @@ import java.nio.ReadOnlyBufferException;
  *                                                 ;   {poll_return}
  *   0x00007fc403e1994a: retq
  * </pre>
- *
- * <p><i>Note on efficiency</i>:
+ * <p>
+ * <p><i>Note on efficiency</i>: 关于效率的说明
  * For best efficiency, the code that uses this class should make sure that only one
  * subclass is loaded, or that the methods that are abstract in this class are used only from one of the
  * subclasses (either the {@link org.apache.flink.core.memory.HeapMemorySegment}, or the
  * {@link org.apache.flink.core.memory.HybridMemorySegment}).
- *
+ * 为了获得最佳效率，使用此类的代码应确保仅加载一个子类，或者此类中的抽象方法仅用于其中一个子类（{@link org.apache.flink。
+ * core.memory.HeapMemorySegment}，或{@link org.apache.flink.core.memory.HybridMemorySegment}）。
+ * <p>
  * <p>That way, all the abstract methods in the MemorySegment base class have only one loaded
  * actual implementation. This is easy for the JIT to recognize through class hierarchy analysis,
  * or by identifying that the invocations are monomorphic (all go to the same concrete
  * method implementation). Under these conditions, the JIT can perfectly inline methods.
+ * 这样，MemorySegment基类中的所有抽象方法只有一个加载的实际实现。 这对于JIT来说很容易通过类层次结构分析来识别，
+ * 或者通过识别调用是单态的（都进入相同的具体方法实现）。 在这些条件下，JIT可以完美地内联方法。
  */
 @Internal
 public abstract class MemorySegment {
 
 	/**
 	 * The unsafe handle for transparent memory copied (heap / off-heap).
+	 * 复制透明内存的不安全句柄（堆/堆外）。
 	 */
 	@SuppressWarnings("restriction")
 	protected static final sun.misc.Unsafe UNSAFE = MemoryUtils.UNSAFE;
@@ -118,7 +139,7 @@ public abstract class MemorySegment {
 
 	/**
 	 * The heap byte array object relative to which we access the memory.
-	 *
+	 * <p>
 	 * <p>Is non-<tt>null</tt> if the memory is on the heap, and is <tt>null</tt>, if the memory is
 	 * off the heap. If we have this buffer, we must never void this reference, or the memory
 	 * segment will point to undefined addresses outside the heap and may in out-of-order execution
@@ -150,7 +171,7 @@ public abstract class MemorySegment {
 
 	/**
 	 * Creates a new memory segment that represents the memory of the byte array.
-	 *
+	 * <p>
 	 * <p>Since the byte array is backed by on-heap memory, this memory segment holds its
 	 * data on heap. The buffer must be at least of size 8 bytes.
 	 *
@@ -173,7 +194,7 @@ public abstract class MemorySegment {
 	 * by the pointer.
 	 *
 	 * @param offHeapAddress The address of the memory represented by this memory segment.
-	 * @param size The size of this memory segment.
+	 * @param size           The size of this memory segment.
 	 */
 	MemorySegment(long offHeapAddress, int size, Object owner) {
 		if (offHeapAddress <= 0) {
@@ -182,7 +203,7 @@ public abstract class MemorySegment {
 		if (offHeapAddress >= Long.MAX_VALUE - Integer.MAX_VALUE) {
 			// this is necessary to make sure the collapsed checks are safe against numeric overflows
 			throw new IllegalArgumentException("Segment initialized with too large address: " + offHeapAddress
-					+ " ; Max allowed address is " + (Long.MAX_VALUE - Integer.MAX_VALUE - 1));
+				+ " ; Max allowed address is " + (Long.MAX_VALUE - Integer.MAX_VALUE - 1));
 		}
 
 		this.heapMemory = null;
@@ -216,7 +237,7 @@ public abstract class MemorySegment {
 
 	/**
 	 * Frees this memory segment.
-	 *
+	 * <p>
 	 * <p>After this operation has been called, no further operations are possible on the memory
 	 * segment and will fail. The actual memory (heap or off-heap) will only be released after this
 	 * memory segment object has become garbage collected.
@@ -241,9 +262,7 @@ public abstract class MemorySegment {
 	 * Returns the byte array of on-heap memory segments.
 	 *
 	 * @return underlying byte array
-	 *
-	 * @throws IllegalStateException
-	 * 		if the memory segment does not represent on-heap memory
+	 * @throws IllegalStateException if the memory segment does not represent on-heap memory
 	 */
 	public byte[] getArray() {
 		if (heapMemory != null) {
@@ -257,9 +276,7 @@ public abstract class MemorySegment {
 	 * Returns the memory address of off-heap memory segments.
 	 *
 	 * @return absolute memory address outside the heap
-	 *
-	 * @throws IllegalStateException
-	 * 		if the memory segment does not represent off-heap memory
+	 * @throws IllegalStateException if the memory segment does not represent off-heap memory
 	 */
 	public long getAddress() {
 		if (heapMemory == null) {
@@ -276,7 +293,6 @@ public abstract class MemorySegment {
 	 *
 	 * @param offset The offset in the memory segment.
 	 * @param length The number of bytes to be wrapped as a buffer.
-	 *
 	 * @return A <tt>ByteBuffer</tt> backed by the specified portion of the memory segment.
 	 * @throws IndexOutOfBoundsException Thrown, if offset is negative or larger than the memory segment size,
 	 *                                   or if the offset plus the length is larger than the segment size.
@@ -313,7 +329,6 @@ public abstract class MemorySegment {
 	 *
 	 * @param index The position from which the byte will be read
 	 * @return The byte at the given position.
-	 *
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or larger or equal to the size of
 	 *                                   the memory segment.
 	 */
@@ -323,8 +338,7 @@ public abstract class MemorySegment {
 	 * Writes the given byte into this buffer at the given position.
 	 *
 	 * @param index The index at which the byte will be written.
-	 * @param b The byte value to be written.
-	 *
+	 * @param b     The byte value to be written.
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or larger or equal to the size of
 	 *                                   the memory segment.
 	 */
@@ -335,8 +349,7 @@ public abstract class MemorySegment {
 	 * the destination memory.
 	 *
 	 * @param index The position at which the first byte will be read.
-	 * @param dst The memory into which the memory will be copied.
-	 *
+	 * @param dst   The memory into which the memory will be copied.
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or too large that the data between the
 	 *                                   index and the memory segment end is not enough to fill the destination array.
 	 */
@@ -347,8 +360,7 @@ public abstract class MemorySegment {
 	 * memory segment beginning at the specified position.
 	 *
 	 * @param index The index in the memory segment array, where the data is put.
-	 * @param src The source array to copy the data from.
-	 *
+	 * @param src   The source array to copy the data from.
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or too large such that the array
 	 *                                   size exceed the amount of memory between the index and the memory
 	 *                                   segment's end.
@@ -359,11 +371,10 @@ public abstract class MemorySegment {
 	 * Bulk get method. Copies length memory from the specified position to the
 	 * destination memory, beginning at the given offset.
 	 *
-	 * @param index The position at which the first byte will be read.
-	 * @param dst The memory into which the memory will be copied.
+	 * @param index  The position at which the first byte will be read.
+	 * @param dst    The memory into which the memory will be copied.
 	 * @param offset The copying offset in the destination memory.
 	 * @param length The number of bytes to be copied.
-	 *
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or too large that the requested number of
 	 *                                   bytes exceed the amount of memory between the index and the memory
 	 *                                   segment's end.
@@ -375,11 +386,10 @@ public abstract class MemorySegment {
 	 * the source memory into the memory segment starting at the specified
 	 * index.
 	 *
-	 * @param index The position in the memory segment array, where the data is put.
-	 * @param src The source array to copy the data from.
+	 * @param index  The position in the memory segment array, where the data is put.
+	 * @param src    The source array to copy the data from.
 	 * @param offset The offset in the source array where the copying is started.
 	 * @param length The number of bytes to copy.
-	 *
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or too large such that the array
 	 *                                   portion to copy exceed the amount of memory between the index and the memory
 	 *                                   segment's end.
@@ -392,7 +402,6 @@ public abstract class MemorySegment {
 	 *
 	 * @param index The position from which the memory will be read.
 	 * @return The boolean value at the given position.
-	 *
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or larger than the segment
 	 *                                   size minus 1.
 	 */
@@ -404,7 +413,6 @@ public abstract class MemorySegment {
 	 *
 	 * @param index The position at which the memory will be written.
 	 * @param value The char value to be written.
-	 *
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or larger than the segment
 	 *                                   size minus 1.
 	 */
@@ -415,7 +423,6 @@ public abstract class MemorySegment {
 	 *
 	 * @param index The position from which the memory will be read.
 	 * @return The char value at the given position.
-	 *
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or larger than the segment
 	 *                                   size minus 2.
 	 */
@@ -424,11 +431,9 @@ public abstract class MemorySegment {
 		final long pos = address + index;
 		if (index >= 0 && pos <= addressLimit - 2) {
 			return UNSAFE.getChar(heapMemory, pos);
-		}
-		else if (address > addressLimit) {
+		} else if (address > addressLimit) {
 			throw new IllegalStateException("This segment has been freed.");
-		}
-		else {
+		} else {
 			// index is in fact invalid
 			throw new IndexOutOfBoundsException();
 		}
@@ -444,7 +449,6 @@ public abstract class MemorySegment {
 	 *
 	 * @param index The position from which the value will be read.
 	 * @return The character value at the given position.
-	 *
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or larger than the segment size minus 2.
 	 */
 	public final char getCharLittleEndian(int index) {
@@ -465,7 +469,6 @@ public abstract class MemorySegment {
 	 *
 	 * @param index The position from which the value will be read.
 	 * @return The character value at the given position.
-	 *
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or larger than the segment size minus 2.
 	 */
 	public final char getCharBigEndian(int index) {
@@ -481,7 +484,6 @@ public abstract class MemorySegment {
 	 *
 	 * @param index The position at which the memory will be written.
 	 * @param value The char value to be written.
-	 *
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or larger than the segment
 	 *                                   size minus 2.
 	 */
@@ -490,11 +492,9 @@ public abstract class MemorySegment {
 		final long pos = address + index;
 		if (index >= 0 && pos <= addressLimit - 2) {
 			UNSAFE.putChar(heapMemory, pos, value);
-		}
-		else if (address > addressLimit) {
+		} else if (address > addressLimit) {
 			throw new IllegalStateException("segment has been freed");
-		}
-		else {
+		} else {
 			// index is in fact invalid
 			throw new IndexOutOfBoundsException();
 		}
@@ -510,7 +510,6 @@ public abstract class MemorySegment {
 	 *
 	 * @param index The position at which the value will be written.
 	 * @param value The char value to be written.
-	 *
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or larger than the segment size minus 2.
 	 */
 	public final void putCharLittleEndian(int index, char value) {
@@ -531,7 +530,6 @@ public abstract class MemorySegment {
 	 *
 	 * @param index The position at which the value will be written.
 	 * @param value The char value to be written.
-	 *
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or larger than the segment size minus 2.
 	 */
 	public final void putCharBigEndian(int index, char value) {
@@ -548,7 +546,6 @@ public abstract class MemorySegment {
 	 *
 	 * @param index The position from which the memory will be read.
 	 * @return The short value at the given position.
-	 *
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or larger than the segment
 	 *                                   size minus 2.
 	 */
@@ -556,11 +553,9 @@ public abstract class MemorySegment {
 		final long pos = address + index;
 		if (index >= 0 && pos <= addressLimit - 2) {
 			return UNSAFE.getShort(heapMemory, pos);
-		}
-		else if (address > addressLimit) {
+		} else if (address > addressLimit) {
 			throw new IllegalStateException("segment has been freed");
-		}
-		else {
+		} else {
 			// index is in fact invalid
 			throw new IndexOutOfBoundsException();
 		}
@@ -576,7 +571,6 @@ public abstract class MemorySegment {
 	 *
 	 * @param index The position from which the value will be read.
 	 * @return The short value at the given position.
-	 *
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or larger than the segment size minus 2.
 	 */
 	public final short getShortLittleEndian(int index) {
@@ -597,7 +591,6 @@ public abstract class MemorySegment {
 	 *
 	 * @param index The position from which the value will be read.
 	 * @return The short value at the given position.
-	 *
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or larger than the segment size minus 2.
 	 */
 	public final short getShortBigEndian(int index) {
@@ -614,7 +607,6 @@ public abstract class MemorySegment {
 	 *
 	 * @param index The position at which the value will be written.
 	 * @param value The short value to be written.
-	 *
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or larger than the segment
 	 *                                   size minus 2.
 	 */
@@ -622,11 +614,9 @@ public abstract class MemorySegment {
 		final long pos = address + index;
 		if (index >= 0 && pos <= addressLimit - 2) {
 			UNSAFE.putShort(heapMemory, pos, value);
-		}
-		else if (address > addressLimit) {
+		} else if (address > addressLimit) {
 			throw new IllegalStateException("segment has been freed");
-		}
-		else {
+		} else {
 			// index is in fact invalid
 			throw new IndexOutOfBoundsException();
 		}
@@ -642,7 +632,6 @@ public abstract class MemorySegment {
 	 *
 	 * @param index The position at which the value will be written.
 	 * @param value The short value to be written.
-	 *
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or larger than the segment size minus 2.
 	 */
 	public final void putShortLittleEndian(int index, short value) {
@@ -663,7 +652,6 @@ public abstract class MemorySegment {
 	 *
 	 * @param index The position at which the value will be written.
 	 * @param value The short value to be written.
-	 *
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or larger than the segment size minus 2.
 	 */
 	public final void putShortBigEndian(int index, short value) {
@@ -684,7 +672,6 @@ public abstract class MemorySegment {
 	 *
 	 * @param index The position from which the value will be read.
 	 * @return The int value at the given position.
-	 *
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or larger than the segment
 	 *                                   size minus 4.
 	 */
@@ -692,11 +679,9 @@ public abstract class MemorySegment {
 		final long pos = address + index;
 		if (index >= 0 && pos <= addressLimit - 4) {
 			return UNSAFE.getInt(heapMemory, pos);
-		}
-		else if (address > addressLimit) {
+		} else if (address > addressLimit) {
 			throw new IllegalStateException("segment has been freed");
-		}
-		else {
+		} else {
 			// index is in fact invalid
 			throw new IndexOutOfBoundsException();
 		}
@@ -712,7 +697,6 @@ public abstract class MemorySegment {
 	 *
 	 * @param index The position from which the value will be read.
 	 * @return The int value at the given position.
-	 *
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or larger than the segment
 	 *                                   size minus 4.
 	 */
@@ -734,7 +718,6 @@ public abstract class MemorySegment {
 	 *
 	 * @param index The position from which the value will be read.
 	 * @return The int value at the given position.
-	 *
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or larger than the segment
 	 *                                   size minus 4.
 	 */
@@ -756,7 +739,6 @@ public abstract class MemorySegment {
 	 *
 	 * @param index The position at which the value will be written.
 	 * @param value The int value to be written.
-	 *
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or larger than the segment
 	 *                                   size minus 4.
 	 */
@@ -764,11 +746,9 @@ public abstract class MemorySegment {
 		final long pos = address + index;
 		if (index >= 0 && pos <= addressLimit - 4) {
 			UNSAFE.putInt(heapMemory, pos, value);
-		}
-		else if (address > addressLimit) {
+		} else if (address > addressLimit) {
 			throw new IllegalStateException("segment has been freed");
-		}
-		else {
+		} else {
 			// index is in fact invalid
 			throw new IndexOutOfBoundsException();
 		}
@@ -784,7 +764,6 @@ public abstract class MemorySegment {
 	 *
 	 * @param index The position at which the value will be written.
 	 * @param value The int value to be written.
-	 *
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or larger than the segment
 	 *                                   size minus 4.
 	 */
@@ -806,7 +785,6 @@ public abstract class MemorySegment {
 	 *
 	 * @param index The position at which the value will be written.
 	 * @param value The int value to be written.
-	 *
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or larger than the segment
 	 *                                   size minus 4.
 	 */
@@ -828,7 +806,6 @@ public abstract class MemorySegment {
 	 *
 	 * @param index The position from which the value will be read.
 	 * @return The long value at the given position.
-	 *
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or larger than the segment
 	 *                                   size minus 8.
 	 */
@@ -836,11 +813,9 @@ public abstract class MemorySegment {
 		final long pos = address + index;
 		if (index >= 0 && pos <= addressLimit - 8) {
 			return UNSAFE.getLong(heapMemory, pos);
-		}
-		else if (address > addressLimit) {
+		} else if (address > addressLimit) {
 			throw new IllegalStateException("segment has been freed");
-		}
-		else {
+		} else {
 			// index is in fact invalid
 			throw new IndexOutOfBoundsException();
 		}
@@ -856,7 +831,6 @@ public abstract class MemorySegment {
 	 *
 	 * @param index The position from which the value will be read.
 	 * @return The long value at the given position.
-	 *
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or larger than the segment
 	 *                                   size minus 8.
 	 */
@@ -878,7 +852,6 @@ public abstract class MemorySegment {
 	 *
 	 * @param index The position from which the value will be read.
 	 * @return The long value at the given position.
-	 *
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or larger than the segment
 	 *                                   size minus 8.
 	 */
@@ -900,7 +873,6 @@ public abstract class MemorySegment {
 	 *
 	 * @param index The position at which the value will be written.
 	 * @param value The long value to be written.
-	 *
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or larger than the segment
 	 *                                   size minus 8.
 	 */
@@ -908,11 +880,9 @@ public abstract class MemorySegment {
 		final long pos = address + index;
 		if (index >= 0 && pos <= addressLimit - 8) {
 			UNSAFE.putLong(heapMemory, pos, value);
-		}
-		else if (address > addressLimit) {
+		} else if (address > addressLimit) {
 			throw new IllegalStateException("segment has been freed");
-		}
-		else {
+		} else {
 			// index is in fact invalid
 			throw new IndexOutOfBoundsException();
 		}
@@ -928,7 +898,6 @@ public abstract class MemorySegment {
 	 *
 	 * @param index The position at which the value will be written.
 	 * @param value The long value to be written.
-	 *
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or larger than the segment
 	 *                                   size minus 8.
 	 */
@@ -950,7 +919,6 @@ public abstract class MemorySegment {
 	 *
 	 * @param index The position at which the value will be written.
 	 * @param value The long value to be written.
-	 *
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or larger than the segment
 	 *                                   size minus 8.
 	 */
@@ -972,7 +940,6 @@ public abstract class MemorySegment {
 	 *
 	 * @param index The position from which the value will be read.
 	 * @return The float value at the given position.
-	 *
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or larger than the segment
 	 *                                   size minus 4.
 	 */
@@ -990,7 +957,6 @@ public abstract class MemorySegment {
 	 *
 	 * @param index The position from which the value will be read.
 	 * @return The long value at the given position.
-	 *
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or larger than the segment
 	 *                                   size minus 4.
 	 */
@@ -1008,7 +974,6 @@ public abstract class MemorySegment {
 	 *
 	 * @param index The position from which the value will be read.
 	 * @return The long value at the given position.
-	 *
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or larger than the segment
 	 *                                   size minus 4.
 	 */
@@ -1026,7 +991,6 @@ public abstract class MemorySegment {
 	 *
 	 * @param index The position at which the value will be written.
 	 * @param value The float value to be written.
-	 *
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or larger than the segment
 	 *                                   size minus 4.
 	 */
@@ -1044,7 +1008,6 @@ public abstract class MemorySegment {
 	 *
 	 * @param index The position at which the value will be written.
 	 * @param value The long value to be written.
-	 *
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or larger than the segment
 	 *                                   size minus 4.
 	 */
@@ -1062,7 +1025,6 @@ public abstract class MemorySegment {
 	 *
 	 * @param index The position at which the value will be written.
 	 * @param value The long value to be written.
-	 *
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or larger than the segment
 	 *                                   size minus 4.
 	 */
@@ -1080,7 +1042,6 @@ public abstract class MemorySegment {
 	 *
 	 * @param index The position from which the value will be read.
 	 * @return The double value at the given position.
-	 *
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or larger than the segment
 	 *                                   size minus 8.
 	 */
@@ -1098,7 +1059,6 @@ public abstract class MemorySegment {
 	 *
 	 * @param index The position from which the value will be read.
 	 * @return The long value at the given position.
-	 *
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or larger than the segment
 	 *                                   size minus 8.
 	 */
@@ -1116,7 +1076,6 @@ public abstract class MemorySegment {
 	 *
 	 * @param index The position from which the value will be read.
 	 * @return The long value at the given position.
-	 *
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or larger than the segment
 	 *                                   size minus 8.
 	 */
@@ -1134,7 +1093,6 @@ public abstract class MemorySegment {
 	 *
 	 * @param index The position at which the memory will be written.
 	 * @param value The double value to be written.
-	 *
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or larger than the segment
 	 *                                   size minus 8.
 	 */
@@ -1152,7 +1110,6 @@ public abstract class MemorySegment {
 	 *
 	 * @param index The position at which the value will be written.
 	 * @param value The long value to be written.
-	 *
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or larger than the segment
 	 *                                   size minus 8.
 	 */
@@ -1170,7 +1127,6 @@ public abstract class MemorySegment {
 	 *
 	 * @param index The position at which the value will be written.
 	 * @param value The long value to be written.
-	 *
 	 * @throws IndexOutOfBoundsException Thrown, if the index is negative, or larger than the segment
 	 *                                   size minus 8.
 	 */
@@ -1188,10 +1144,9 @@ public abstract class MemorySegment {
 	 * Bulk put method. Copies length memory from the given DataInput to the
 	 * memory starting at position offset.
 	 *
-	 * @param in The DataInput to get the data from.
+	 * @param in     The DataInput to get the data from.
 	 * @param offset The position in the memory segment to copy the chunk to.
 	 * @param length The number of bytes to get.
-	 *
 	 * @throws IOException Thrown, if the DataInput encountered a problem upon reading,
 	 *                     such as an End-Of-File.
 	 */
@@ -1204,14 +1159,13 @@ public abstract class MemorySegment {
 	 * the target byte buffer has remaining (with respect to {@link ByteBuffer#remaining()}),
 	 * this method will cause a {@link java.nio.BufferOverflowException}.
 	 *
-	 * @param offset The position where the bytes are started to be read from in this memory segment.
-	 * @param target The ByteBuffer to copy the bytes to.
+	 * @param offset   The position where the bytes are started to be read from in this memory segment.
+	 * @param target   The ByteBuffer to copy the bytes to.
 	 * @param numBytes The number of bytes to copy.
-	 *
 	 * @throws IndexOutOfBoundsException If the offset is invalid, or this segment does not
-	 *           contain the given number of bytes (starting from offset), or the target byte buffer does
-	 *           not have enough space for the bytes.
-	 * @throws ReadOnlyBufferException If the target buffer is read-only.
+	 *                                   contain the given number of bytes (starting from offset), or the target byte buffer does
+	 *                                   not have enough space for the bytes.
+	 * @throws ReadOnlyBufferException   If the target buffer is read-only.
 	 */
 	public abstract void get(int offset, ByteBuffer target, int numBytes);
 
@@ -1224,13 +1178,12 @@ public abstract class MemorySegment {
 	 * the target byte buffer has remaining (with respect to {@link ByteBuffer#remaining()}),
 	 * this method will cause a {@link java.nio.BufferUnderflowException}.
 	 *
-	 * @param offset The position where the bytes are started to be written to in this memory segment.
-	 * @param source The ByteBuffer to copy the bytes from.
+	 * @param offset   The position where the bytes are started to be written to in this memory segment.
+	 * @param source   The ByteBuffer to copy the bytes from.
 	 * @param numBytes The number of bytes to copy.
-	 *
 	 * @throws IndexOutOfBoundsException If the offset is invalid, or the source buffer does not
-	 *           contain the given number of bytes, or this segment does
-	 *           not have enough space for the bytes (counting from offset).
+	 *                                   contain the given number of bytes, or this segment does
+	 *                                   not have enough space for the bytes (counting from offset).
 	 */
 	public abstract void put(int offset, ByteBuffer source, int numBytes);
 
@@ -1239,14 +1192,13 @@ public abstract class MemorySegment {
 	 * {@code offset} to the target memory segment. The bytes will be put into the target segment
 	 * starting at position {@code targetOffset}.
 	 *
-	 * @param offset The position where the bytes are started to be read from in this memory segment.
-	 * @param target The memory segment to copy the bytes to.
+	 * @param offset       The position where the bytes are started to be read from in this memory segment.
+	 * @param target       The memory segment to copy the bytes to.
 	 * @param targetOffset The position in the target memory segment to copy the chunk to.
-	 * @param numBytes The number of bytes to copy.
-	 *
+	 * @param numBytes     The number of bytes to copy.
 	 * @throws IndexOutOfBoundsException If either of the offsets is invalid, or the source segment does not
-	 *           contain the given number of bytes (starting from offset), or the target segment does
-	 *           not have enough space for the bytes (counting from targetOffset).
+	 *                                   contain the given number of bytes (starting from offset), or the target segment does
+	 *                                   not have enough space for the bytes (counting from targetOffset).
 	 */
 	public final void copyTo(int offset, MemorySegment target, int targetOffset, int numBytes) {
 		final byte[] thisHeapRef = this.heapMemory;
@@ -1255,18 +1207,15 @@ public abstract class MemorySegment {
 		final long otherPointer = target.address + targetOffset;
 
 		if ((numBytes | offset | targetOffset) >= 0 &&
-				thisPointer <= this.addressLimit - numBytes && otherPointer <= target.addressLimit - numBytes) {
+			thisPointer <= this.addressLimit - numBytes && otherPointer <= target.addressLimit - numBytes) {
 			UNSAFE.copyMemory(thisHeapRef, thisPointer, otherHeapRef, otherPointer, numBytes);
-		}
-		else if (this.address > this.addressLimit) {
+		} else if (this.address > this.addressLimit) {
 			throw new IllegalStateException("this memory segment has been freed.");
-		}
-		else if (target.address > target.addressLimit) {
+		} else if (target.address > target.addressLimit) {
 			throw new IllegalStateException("target memory segment has been freed.");
-		}
-		else {
+		} else {
 			throw new IndexOutOfBoundsException(
-					String.format("offset=%d, targetOffset=%d, numBytes=%d, address=%d, targetAddress=%d",
+				String.format("offset=%d, targetOffset=%d, numBytes=%d, address=%d, targetAddress=%d",
 					offset, targetOffset, numBytes, this.address, target.address));
 		}
 	}
@@ -1275,20 +1224,19 @@ public abstract class MemorySegment {
 	 * Bulk copy method. Copies {@code numBytes} bytes to target unsafe object and pointer.
 	 * NOTE: This is a unsafe method, no check here, please be carefully.
 	 *
-	 * @param offset The position where the bytes are started to be read from in this memory segment.
-	 * @param target The unsafe memory to copy the bytes to.
+	 * @param offset        The position where the bytes are started to be read from in this memory segment.
+	 * @param target        The unsafe memory to copy the bytes to.
 	 * @param targetPointer The position in the target unsafe memory to copy the chunk to.
-	 * @param numBytes The number of bytes to copy.
-	 *
+	 * @param numBytes      The number of bytes to copy.
 	 * @throws IndexOutOfBoundsException If the source segment does not contain the given number
-	 *           of bytes (starting from offset).
+	 *                                   of bytes (starting from offset).
 	 */
 	public final void copyToUnsafe(int offset, Object target, int targetPointer, int numBytes) {
 		final long thisPointer = this.address + offset;
 		if (thisPointer + numBytes > addressLimit) {
 			throw new IndexOutOfBoundsException(
-					String.format("offset=%d, numBytes=%d, address=%d",
-							offset, numBytes, this.address));
+				String.format("offset=%d, numBytes=%d, address=%d",
+					offset, numBytes, this.address));
 		}
 		UNSAFE.copyMemory(this.heapMemory, thisPointer, target, targetPointer, numBytes);
 	}
@@ -1297,20 +1245,19 @@ public abstract class MemorySegment {
 	 * Bulk copy method. Copies {@code numBytes} bytes from source unsafe object and pointer.
 	 * NOTE: This is a unsafe method, no check here, please be carefully.
 	 *
-	 * @param offset The position where the bytes are started to be write in this memory segment.
-	 * @param source The unsafe memory to copy the bytes from.
+	 * @param offset        The position where the bytes are started to be write in this memory segment.
+	 * @param source        The unsafe memory to copy the bytes from.
 	 * @param sourcePointer The position in the source unsafe memory to copy the chunk from.
-	 * @param numBytes The number of bytes to copy.
-	 *
+	 * @param numBytes      The number of bytes to copy.
 	 * @throws IndexOutOfBoundsException If this segment can not contain the given number
-	 *           of bytes (starting from offset).
+	 *                                   of bytes (starting from offset).
 	 */
 	public final void copyFromUnsafe(int offset, Object source, int sourcePointer, int numBytes) {
 		final long thisPointer = this.address + offset;
 		if (thisPointer + numBytes > addressLimit) {
 			throw new IndexOutOfBoundsException(
-					String.format("offset=%d, numBytes=%d, address=%d",
-							offset, numBytes, this.address));
+				String.format("offset=%d, numBytes=%d, address=%d",
+					offset, numBytes, this.address));
 		}
 		UNSAFE.copyMemory(source, sourcePointer, this.heapMemory, thisPointer, numBytes);
 	}
@@ -1322,11 +1269,10 @@ public abstract class MemorySegment {
 	/**
 	 * Compares two memory segment regions.
 	 *
-	 * @param seg2 Segment to compare this segment with
+	 * @param seg2    Segment to compare this segment with
 	 * @param offset1 Offset of this segment to start comparing
 	 * @param offset2 Offset of seg2 to start comparing
-	 * @param len Length of the compared memory region
-	 *
+	 * @param len     Length of the compared memory region
 	 * @return 0 if equal, -1 if seg1 &lt; seg2, 1 otherwise
 	 */
 	public final int compare(MemorySegment seg2, int offset1, int offset2, int len) {
@@ -1360,10 +1306,10 @@ public abstract class MemorySegment {
 	 * Swaps bytes between two memory segments, using the given auxiliary buffer.
 	 *
 	 * @param tempBuffer The auxiliary buffer in which to put data during triangle swap.
-	 * @param seg2 Segment to swap bytes with
-	 * @param offset1 Offset of this segment to start swapping
-	 * @param offset2 Offset of seg2 to start swapping
-	 * @param len Length of the swapped memory region
+	 * @param seg2       Segment to swap bytes with
+	 * @param offset1    Offset of this segment to start swapping
+	 * @param offset2    Offset of seg2 to start swapping
+	 * @param len        Length of the swapped memory region
 	 */
 	public final void swapBytes(byte[] tempBuffer, MemorySegment seg2, int offset1, int offset2, int len) {
 		if ((offset1 | offset2 | len | (tempBuffer.length - len)) >= 0) {
@@ -1380,29 +1326,26 @@ public abstract class MemorySegment {
 				// temp buffer -> other
 				UNSAFE.copyMemory(tempBuffer, BYTE_ARRAY_BASE_OFFSET, seg2.heapMemory, otherPos, len);
 				return;
-			}
-			else if (this.address > this.addressLimit) {
+			} else if (this.address > this.addressLimit) {
 				throw new IllegalStateException("this memory segment has been freed.");
-			}
-			else if (seg2.address > seg2.addressLimit) {
+			} else if (seg2.address > seg2.addressLimit) {
 				throw new IllegalStateException("other memory segment has been freed.");
 			}
 		}
 
 		// index is in fact invalid
 		throw new IndexOutOfBoundsException(
-					String.format("offset1=%d, offset2=%d, len=%d, bufferSize=%d, address1=%d, address2=%d",
-							offset1, offset2, len, tempBuffer.length, this.address, seg2.address));
+			String.format("offset1=%d, offset2=%d, len=%d, bufferSize=%d, address1=%d, address2=%d",
+				offset1, offset2, len, tempBuffer.length, this.address, seg2.address));
 	}
 
 	/**
 	 * Equals two memory segment regions.
 	 *
-	 * @param seg2 Segment to equal this segment with
+	 * @param seg2    Segment to equal this segment with
 	 * @param offset1 Offset of this segment to start equaling
 	 * @param offset2 Offset of seg2 to start equaling
-	 * @param length Length of the equaled memory region
-	 *
+	 * @param length  Length of the equaled memory region
 	 * @return true if equal, false otherwise
 	 */
 	public final boolean equalTo(MemorySegment seg2, int offset1, int offset2, int length) {
@@ -1430,6 +1373,7 @@ public abstract class MemorySegment {
 
 	/**
 	 * Get the heap byte array object.
+	 *
 	 * @return Return non-null if the memory is on the heap, and return null if the memory if off the heap.
 	 */
 	public byte[] getHeapMemory() {

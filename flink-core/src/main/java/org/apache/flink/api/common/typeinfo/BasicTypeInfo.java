@@ -67,6 +67,7 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
 /**
  * Type information for primitive types (int, long, double, byte, ...), String, Date, Void,
  * BigInteger, and BigDecimal.
+ * 基本类型（int、long、double、byte，…）、string、date、void、biginteger和bigdecimal的类型信息。
  */
 @Public
 public class BasicTypeInfo<T> extends TypeInformation<T> implements AtomicType<T> {
@@ -115,7 +116,7 @@ public class BasicTypeInfo<T> extends TypeInformation<T> implements AtomicType<T
 	 */
 	@PublicEvolving
 	public boolean shouldAutocastTo(BasicTypeInfo<?> to) {
-		for (Class<?> possibleTo: possibleCastTargetTypes) {
+		for (Class<?> possibleTo : possibleCastTargetTypes) {
 			if (possibleTo.equals(to.getTypeClass())) {
 				return true;
 			}
@@ -224,8 +225,7 @@ public class BasicTypeInfo<T> extends TypeInformation<T> implements AtomicType<T
 		try {
 			Constructor<? extends TypeComparator<X>> constructor = comparatorClass.getConstructor(boolean.class);
 			return constructor.newInstance(ascendingOrder);
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			throw new RuntimeException("Could not initialize basic comparator " + comparatorClass.getName(), e);
 		}
 	}

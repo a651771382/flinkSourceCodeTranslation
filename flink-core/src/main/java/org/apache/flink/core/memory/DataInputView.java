@@ -27,6 +27,8 @@ import java.io.IOException;
 /**
  * This interface defines a view over some memory that can be used to sequentially read the contents of the memory.
  * The view is typically backed by one or more {@link org.apache.flink.core.memory.MemorySegment}.
+ * 此接口定义了一些可用于顺序读取内存内容的内存视图。
+ * 该视图通常由一个或多个{@link org.apache.flink.core.memory.MemorySegment}支持。
  */
 @Public
 public interface DataInputView extends DataInput {
@@ -36,7 +38,6 @@ public interface DataInputView extends DataInput {
 	 * this method always skips the desired number of bytes or throws an {@link java.io.EOFException}.
 	 *
 	 * @param numBytes The number of bytes to skip.
-	 *
 	 * @throws IOException Thrown, if any I/O related problem occurred such that the input could not
 	 *                     be advanced to the desired position.
 	 */
@@ -46,7 +47,7 @@ public interface DataInputView extends DataInput {
 	 * Reads up to {@code len} bytes of memory and stores it into {@code b} starting at offset {@code off}.
 	 * It returns the number of read bytes or -1 if there is no more data left.
 	 *
-	 * @param b byte array to store the data to
+	 * @param b   byte array to store the data to
 	 * @param off offset into byte array
 	 * @param len byte length to read
 	 * @return the number of actually read bytes of -1 if there is no more data left
