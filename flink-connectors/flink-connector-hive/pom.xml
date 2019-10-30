@@ -502,7 +502,7 @@ under the License.
 		<profile>
 			<id>hive-1.2.1</id>
 			<properties>
-				<hive.version>1.2.1</hive.version>
+				<hive.version>3.1.2</hive.version>
 				<hivemetastore.hadoop.version>2.6.0</hivemetastore.hadoop.version>
 			</properties>
 		</profile>
